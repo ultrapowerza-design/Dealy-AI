@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Dealy AI Assistant</title>
+    <script>
+        // Inside the website widget's iframe? Show the chat full-frame (see extra.css).
+        if (new URLSearchParams(location.search).has("embed")) {
+            document.documentElement.classList.add("embed");
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/extra.css">
+</head>
+<body>
+
+    <main class="preview">
+        <p>Chat preview. Select the Dealy button in the corner to open the assistant.</p>
+    </main>
+
+    <button id="chatToggle" class="chat-launcher" type="button"
+            aria-label="Open Dealy support chat" aria-expanded="false" aria-controls="chatPanel">
+        <img src="/logo.png" alt="">
+        <span class="launcher-x" aria-hidden="true">&times;</span>
+        <span class="launcher-dot" aria-hidden="true"></span>
+    </button>
+
+    <div id="chatPanel" class="chat-panel" role="dialog" aria-label="Dealy support chat">
+        <section class="chat-box">
+            <div class="chat-header">
+                <img src="/logo.png" alt="" class="chat-avatar">
+                <div class="chat-title">
+                    <strong>Dealy AI</strong>
+                    <small>Here to help you</small>
+                </div>
+                <div class="chat-actions">
+                    <button type="button" id="newChat" class="link-button">New chat</button>
+                    <button type="button" id="chatClose" class="chat-close" aria-label="Close chat">&times;</button>
+                </div>
+            </div>
+
+            <div id="messages" class="messages" aria-live="polite">
+                <div class="message bot-message">
+                    Hello! Welcome to Dealy. 👋<br><br>I'm your virtual assistant. I can help you find demo and clearance deals, check stock, and explain how Dealy works. You're welcome to visit our Midrand showroom and see items in person before you buy.<br><br>What would you like help with?
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <button data-prompt="I need help finding a product.">Find a product</button>
+                <button data-prompt="How does Dealy work and what are demo products?">How Dealy works</button>
+                <button data-prompt="Where is your showroom and when is it open?">Visit the showroom</button>
+                <button data-prompt="Tell me about refunds and warranty.">Refunds &amp; warranty</button>
+                <button data-action="human" class="human">Talk to a person</button>
+            </div>
+
+            <form id="chatForm" class="chat-form">
+                <input
+                    type="text"
+                    id="messageInput"
+                    placeholder="Type your message here..."
+                    autocomplete="off"
+                    maxlength="500"
+                    required
+                >
+                <button type="submit" id="sendButton">Send</button>
+            </form>
+
+            <p class="privacy">
+                Please don't share passwords or card details. Chats are saved to improve our service.
+                <a href="https://dealy.co.za/privacy-policy-2/" target="_blank" rel="noopener">Privacy policy</a>
+            </p>
+        </section>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>

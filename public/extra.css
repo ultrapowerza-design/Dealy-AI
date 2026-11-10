@@ -1,0 +1,164 @@
+/* Loaded after styles.css (which stays unchanged).
+   1) shared bits  2) toggle layout (standalone page)  3) embed mode (inside the website widget) */
+
+/* ---------- 1. shared ---------- */
+button, input { font-family: inherit; }
+.message a { color: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+.bot-message a { color: var(--brand-text); }
+.bot-message.typing { opacity: 0.65; font-style: italic; }
+
+.link-button {
+    background: none;
+    border: 0;
+    padding: 6px 8px;
+    border-radius: 6px;
+    color: var(--text-soft);
+    font-size: 12px;
+    cursor: pointer;
+}
+.link-button:hover { color: var(--brand-text); background: var(--brand-tint); }
+
+.quick-actions button.human { border-color: var(--brand); color: var(--brand-text); }
+.quick-actions button.human:hover { background: var(--brand-tint); border-color: var(--brand); }
+
+.privacy a { color: inherit; }
+
+.contact-card .contact-title { margin-bottom: 10px; }
+.contact-card .contact-links { display: flex; flex-direction: column; gap: 8px; }
+.contact-card .contact-links a {
+    display: block;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px solid #e0d6f0;
+    border-radius: 9px;
+    color: var(--brand-text);
+    text-decoration: none;
+}
+.contact-card .contact-links a:hover { border-color: var(--brand); }
+.contact-card .contact-links small { display: block; color: var(--text-soft); font-weight: 400; margin-top: 2px; }
+
+button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--brand-text); outline-offset: 2px; }
+
+/* ---------- 2. toggle layout ---------- */
+.preview {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    text-align: center;
+    color: var(--text-soft);
+    font-size: 14px;
+}
+
+.chat-launcher {
+    position: fixed;
+    right: 20px;
+    bottom: max(20px, env(safe-area-inset-bottom));
+    z-index: 50;
+    width: 64px;
+    height: 64px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 6px 24px rgba(20,28,45, 0.28);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: transform 0.18s ease;
+}
+.chat-launcher:hover { transform: scale(1.06); }
+.chat-launcher img { width: 42px; height: 42px; object-fit: contain; }
+.launcher-dot {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #15965b;
+    border: 2px solid #fff;
+}
+.launcher-x { display: none; font-size: 32px; line-height: 1; color: var(--brand-text); }
+.chat-launcher.open img, .chat-launcher.open .launcher-dot { display: none; }
+.chat-launcher.open .launcher-x { display: block; }
+
+.chat-panel {
+    position: fixed;
+    right: 20px;
+    bottom: calc(max(20px, env(safe-area-inset-bottom)) + 76px);
+    z-index: 50;
+    width: 380px;
+    height: min(640px, calc(100vh - 120px));
+    height: min(640px, calc(100dvh - 120px));
+    display: none;
+}
+.chat-panel.open { display: block; animation: panel-in 0.18s ease-out; }
+@keyframes panel-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to   { opacity: 1; transform: none; }
+}
+
+.chat-panel .chat-box {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border: 0;
+    border-radius: 16px;
+    box-shadow: 0 14px 50px rgba(20,28,45, 0.32);
+}
+.chat-panel .messages { flex: 1; height: auto; min-height: 0; padding: 18px; }
+
+.chat-panel .chat-header { background: var(--brand); border-bottom: 0; padding: 12px 12px 12px 14px; }
+.chat-avatar { width: 34px; height: 34px; padding: 4px; border-radius: 50%; background: #fff; object-fit: contain; }
+.chat-panel .chat-header strong { color: var(--on-brand); }
+.chat-panel .chat-header small { color: var(--brand-on-dark); margin-top: 2px; }
+.chat-actions { margin-left: auto; display: flex; align-items: center; gap: 2px; }
+.chat-panel .chat-header .link-button { color: var(--brand-on-dark); }
+.chat-panel .chat-header .link-button:hover { color: var(--on-brand); background: rgba(255, 255, 255, 0.20); }
+.chat-close {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--on-brand);
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+.chat-close:hover { background: rgba(255, 255, 255, 0.20); }
+.chat-panel .chat-header :focus-visible { outline-color: var(--on-brand); }
+
+/* one scrollable row of quick buttons instead of several wrapped rows */
+.chat-panel .quick-actions { flex-wrap: nowrap; overflow-x: auto; padding: 10px 14px; scrollbar-width: thin; }
+.chat-panel .quick-actions button { flex: none; white-space: nowrap; }
+.chat-panel .chat-form { padding: 12px 14px; }
+
+@media (max-width: 480px) {
+    .chat-panel { inset: 0; width: 100%; height: 100%; }
+    .chat-panel .chat-box { border-radius: 0; }
+    .chat-launcher.open { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chat-launcher, .chat-panel.open { transition: none; animation: none; }
+}
+
+/* ---------- 3. embed mode: the website widget supplies its own bar and close button ---------- */
+html.embed, html.embed body { height: 100%; min-height: 0; background: #fff; }
+html.embed .preview, html.embed .chat-launcher,
+html.embed .chat-close, html.embed .chat-avatar, html.embed .chat-title { display: none; }
+html.embed .chat-panel { position: static; display: block; width: 100%; height: 100%; animation: none; }
+html.embed .chat-panel .chat-box { border-radius: 0; box-shadow: none; }
+html.embed .chat-panel .chat-header { background: #fff; border-bottom: 1px solid #efe9f7; padding: 6px 12px; }
+html.embed .chat-panel .chat-header .link-button { color: var(--text-soft); }
+html.embed .chat-panel .chat-header .link-button:hover { color: var(--brand-text); background: var(--brand-tint); }
+
+/* White text on the lavender: bolder with a soft shadow so it stays easy to read */
+.chat-panel .chat-header strong, .chat-panel .chat-header small, .chat-panel .chat-header .link-button,
+.chat-close, .user-message, .chat-form button { text-shadow: 0 1px 2px rgba(70, 45, 110, 0.40); }
+.user-message, .chat-form button, .chat-panel .chat-header small { font-weight: 600; }
+
+/* Header title in the heavy lettering of the Dealy wordmark */
+.chat-panel .chat-header strong { font-family: "Archivo Black", Arial, sans-serif; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 400; }
