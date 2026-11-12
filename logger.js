@@ -29,10 +29,38 @@ export async function pruneLogs() {
 pruneLogs();
 setInterval(pruneLogs, 86_400_000).unref();
 
+// Permanent storage (optional). Render's free disk is wiped on every redeploy, so each chat is also sent to a
+// private Google Sheet through an Apps Script web app. Set LOG_WEBHOOK_URL and LOG_WEBHOOK_SECRET to switch it on.
+const SHEET_URL = process.env.LOG_WEBHOOK_URL || "";
+const SHEET_SECRET = process.env.LOG_WEBHOOK_SECRET || "";
+const BOT_NAME = process.env.BOT_NAME || "Dealy";
+
+async function sendToSheet(row) {
+  if (!SHEET_URL || !SHEET_SECRET) return;
+  try {
+    const res = await fetch(SHEET_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        ...row,
+        secret: SHEET_SECRET,
+        bot: BOT_NAME,
+        tools: (row.tools ?? []).map((t) => `${t.name}: ${t.args?.query ?? ""}`).join("; ")
+      }),
+      redirect: "follow",
+      signal: AbortSignal.timeout(10_000)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  } catch (err) {
+    console.error("LOG SHEET ERROR:", err.message);
+  }
+}
+
 export async function logChat(entry) {
+  const safe = { ...entry, question: maskPII(entry.question), reply: maskPII(entry.reply) };
+  sendToSheet(safe); // not awaited, so the customer never waits for it
   try {
     await mkdir(DIR, { recursive: true });
-    const safe = { ...entry, question: maskPII(entry.question), reply: maskPII(entry.reply) };
     await appendFile(FILE, JSON.stringify(safe) + "\n");
   } catch (err) {
     console.error("LOG ERROR:", err.message);
@@ -53,3 +81,4 @@ export async function readLogs({ limit = 100, followUpOnly = false } = {}) {
     return [];
   }
 }
+
