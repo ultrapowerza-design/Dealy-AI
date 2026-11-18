@@ -45,7 +45,7 @@ async function sendToSheet(row) {
         ...row,
         secret: SHEET_SECRET,
         bot: BOT_NAME,
-        tools: (row.tools ?? []).map((t) => `${t.name}: ${t.args?.query ?? ""}`).join("; ")
+        tools: (row.tools ?? []).map((t) => `${t.name}: ${t.args?.query ?? t.args?.category ?? ""}`).join("; ")
       }),
       redirect: "follow",
       signal: AbortSignal.timeout(10_000)
@@ -81,4 +81,3 @@ export async function readLogs({ limit = 100, followUpOnly = false } = {}) {
     return [];
   }
 }
-

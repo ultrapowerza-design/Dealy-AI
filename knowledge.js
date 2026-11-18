@@ -56,6 +56,7 @@ REFUNDS, RETURNS AND WARRANTY (be clear and honest about these, kindly)
 
 STOCK AVAILABILITY
 - Customers can ask whether a product is in stock. Use the search_products tool to check; never answer from memory.
+- For broad questions such as "what demo stock do you have", use the browse_products tool, which lists the newest in-stock items.
 - Dealy's stock is demo and clearance stock, so quantities are often small and items can sell out.
 - Give a stock quantity only if the tool returns one. Otherwise say only whether the product is in stock, on backorder or Sold Out.
 

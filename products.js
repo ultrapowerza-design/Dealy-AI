@@ -194,9 +194,18 @@ async function findProducts(q) {
   return (await fetchStoreApi(q)).map(shapeStore);
 }
 
-export async function searchProducts({ query } = {}) {
-  const q = String(query ?? "").trim().slice(0, 80);
+export async function searchProducts({ query, _noBrowse } = {}) {
+  let q = String(query ?? "").trim().slice(0, 80);
   if (!q) return { error: "No search terms given." };
+
+  // "demo" and "clearance" are categories, not words in product names, so a keyword search for them finds nothing.
+  if (!_noBrowse) {
+    const rest = q.replace(CONDITION_WORDS, " ").replace(/\s+/g, " ").trim();
+    if (rest !== q) {
+      if (!rest) return browseProducts({ category: q });
+      q = rest;
+    }
+  }
 
   const searchUrl = `${STORE}/?s=${encodeURIComponent(q)}&post_type=product`;
   const key = q.toLowerCase();
@@ -225,5 +234,132 @@ export async function searchProducts({ query } = {}) {
   } catch (err) {
     console.error("PRODUCT SEARCH ERROR:", err.message);
     return { error: "Live product search is temporarily unavailable.", search_link: searchUrl };
+  }
+}
+
+/* ---------- browsing by category / condition (broad questions like "what demo stock do you have") ---------- */
+
+const CONDITION_WORDS = /\b(demo|demos|clearance)(\s+(stock|models?|items?|products?|deals?))?\b/gi;
+const SYNONYMS = [
+  [/^(demo|demos|demo stock|demo models?|demo products?|demo items?|demo deals?)$/i, "demo model"],
+  [/^(clearance|clearance stock|clearance items?|clearance products?|clearance deals?)$/i, "clearance stock"]
+];
+
+export const browseTool = {
+  type: "function",
+  function: {
+    name: "browse_products",
+    description:
+      "List the newest in-stock products in a category or condition WITHOUT a search keyword. Use for broad questions such as " +
+      "'what demo stock do you have', 'any clearance deals', 'what's new', 'what office chairs do you have' or 'what do you sell'. " +
+      "Returns up to 6 products, newest first, with price, condition, stock and links.",
+    parameters: {
+      type: "object",
+      properties: {
+        category: {
+          type: "string",
+          description:
+            "Optional. A category or condition such as 'demo', 'clearance', 'office chairs', 'projectors' or 'tv stands'. Leave empty for the newest products overall."
+        }
+      }
+    }
+  }
+};
+
+let catCache = { t: 0, list: [] };
+async function getCategories() {
+  if (catCache.list.length && Date.now() - catCache.t < 10 * 60_000) return catCache.list;
+  const res = await fetch(`${STORE}/wp-json/wc/store/v1/products/categories?per_page=100&hide_empty=true`, {
+    signal: AbortSignal.timeout(6000),
+    headers: { Accept: "application/json" }
+  });
+  if (!res.ok) throw new Error(`Categories returned ${res.status}`);
+  const data = await res.json();
+  if (!Array.isArray(data)) throw new Error("Unexpected categories response");
+  catCache = {
+    t: Date.now(),
+    list: data.map((c) => ({ id: c.id, name: clean(c.name), url: c.permalink || c.link || "" }))
+  };
+  return catCache.list;
+}
+
+function resolveCategory(text, list) {
+  let t = String(text ?? "").trim().toLowerCase();
+  if (!t) return null;
+  for (const [re, name] of SYNONYMS) if (re.test(t)) t = name;
+  const norm = (s) => s.toLowerCase().trim();
+  const singular = t.length > 3 ? t.replace(/s$/, "") : t;
+  return (
+    list.find((c) => norm(c.name) === t) ||
+    (t.length >= 3 ? list.find((c) => norm(c.name).includes(t) || norm(c.name).includes(singular)) : null) ||
+    null
+  );
+}
+
+async function newestProducts(categoryId) {
+  const WANT = 6;
+  if (HAS_KEYS) {
+    try {
+      const params = { per_page: "12", orderby: "date", order: "desc", status: "publish" };
+      if (categoryId) params.category = String(categoryId);
+      const items = await wcFetch("products", params);
+      if (!Array.isArray(items)) throw new Error("Unexpected WooCommerce response");
+      return items.filter((p) => p.stock_status !== "outofstock").slice(0, WANT).map((p) => shapeWc(p));
+    } catch (err) {
+      console.error("WOOCOMMERCE BROWSE ERROR (using public store data instead):", err.message);
+    }
+  }
+  const catPart = categoryId ? `&category=${encodeURIComponent(categoryId)}` : "";
+  const res = await fetch(`${STORE}/wp-json/wc/store/v1/products?per_page=12&orderby=date&order=desc${catPart}`, {
+    signal: AbortSignal.timeout(6000),
+    headers: { Accept: "application/json" }
+  });
+  if (!res.ok) throw new Error(`Store returned ${res.status}`);
+  const data = await res.json();
+  if (!Array.isArray(data)) throw new Error("Unexpected store response");
+  return data.filter((p) => p.is_in_stock !== false).slice(0, WANT).map(shapeStore);
+}
+
+export async function browseProducts({ category } = {}) {
+  const text = String(category ?? "").trim().slice(0, 60);
+  const shopUrl = `${STORE}/shop/`;
+
+  let match = null;
+  try {
+    if (text) {
+      match = resolveCategory(text, await getCategories());
+      // Not a known category: fall back to a normal keyword search.
+      if (!match) return searchProducts({ query: text, _noBrowse: true });
+    }
+  } catch (err) {
+    console.error("CATEGORY LOOKUP ERROR:", err.message);
+    if (text) return searchProducts({ query: text, _noBrowse: true });
+  }
+
+  const key = `browse:${match ? match.id : "all"}`;
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.t < CACHE_MS) return hit.v;
+
+  if (!lookupAllowed()) {
+    return { error: "Live product search is busy right now. Please try again in a minute.", search_link: shopUrl };
+  }
+
+  try {
+    const products = await newestProducts(match?.id);
+    const result = {
+      category: match ? match.name : "All products (newest first)",
+      count: products.length,
+      products,
+      more_results_link: match?.url || shopUrl
+    };
+    if (!products.length) {
+      result.note = "No in-stock products found in this category right now. Check the link or contact Dealy.";
+    }
+    if (cache.size > 200) cache.clear();
+    cache.set(key, { t: Date.now(), v: result });
+    return result;
+  } catch (err) {
+    console.error("BROWSE ERROR:", err.message);
+    return { error: "Live product search is temporarily unavailable.", search_link: shopUrl };
   }
 }
