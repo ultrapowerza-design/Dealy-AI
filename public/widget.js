@@ -22,12 +22,13 @@
   var side = left ? "left" : "right";
   var css =
     "#nsc-btn,#nsc-panel{position:fixed;z-index:2147483000;" + side + ":20px;font-family:Barlow,Arial,Helvetica,sans-serif}" +
-    "#nsc-btn{bottom:max(20px,env(safe-area-inset-bottom));width:64px;height:64px;border:0;border-radius:50%;background:#fff;" +
+    "#nsc-btn{bottom:max(20px,env(safe-area-inset-bottom));width:72px;height:72px;border:0;border-radius:50%;background:#fff;" +
     "box-shadow:0 6px 24px rgba(20,28,45,.28);cursor:pointer;padding:0;display:grid;place-items:center;transition:transform .18s}" +
     "#nsc-btn:hover{transform:scale(1.06)}" +
-    "#nsc-btn img{width:42px;height:42px;object-fit:contain}" +
+    "#nsc-btn img{width:58px;height:58px;object-fit:contain}" +
+    "#nsc-btn .nsc-ai{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#e4009a;color:#fff;font:700 12px/1 Arial,Helvetica,sans-serif;letter-spacing:.04em;padding:3px 6px;border-radius:7px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);text-shadow:0 1px 1px rgba(0,0,0,.25);pointer-events:none}" +
     "#nsc-btn .nsc-x{display:none;font-size:32px;line-height:1;color:#b80079}" +
-    "#nsc-btn.open img{display:none}#nsc-btn.open .nsc-x{display:block}" +
+    "#nsc-btn.open img,#nsc-btn.open .nsc-ai{display:none}#nsc-btn.open .nsc-x{display:block}" +
     "#nsc-panel{bottom:calc(max(20px,env(safe-area-inset-bottom)) + 76px);width:380px;height:min(640px,calc(100vh - 120px));" +
     "display:none;flex-direction:column;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 14px 50px rgba(20,28,45,.32)}" +
     "#nsc-panel.open{display:flex}" +
@@ -55,7 +56,8 @@
   btn.type = "button";
   btn.setAttribute("aria-label", "Open Dealy support chat");
   btn.setAttribute("aria-expanded", "false");
-  btn.innerHTML = '<img alt="" src="' + origin + '/logo.png"><span class="nsc-x" aria-hidden="true">&times;</span>';
+  btn.innerHTML = '<img alt="" src="' + origin + '/logo.png"><span class="nsc-ai" aria-hidden="true">AI</span><span class="nsc-x" aria-hidden="true">&times;</span>';
+  btn.title = "Chat with our AI assistant";
 
   var panel = document.createElement("div");
   panel.id = "nsc-panel";
