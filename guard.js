@@ -57,7 +57,13 @@ const ECHO = [
   /\b(repeat|echo|say|print|type|output|respond|reply|answer|return)\b.{0,25}\b(exactly|verbatim|word for word|after me|only|just)\b/,
   /\brepeat (this|that|after me|exactly|the (word|phrase|text|following)|what i)\b/,
   /\b(respond|reply|answer|output) (only )?(in|with) (json|xml|yaml|base64|code)\b/,
-  /^(test|ping|pong|echo)\b[\s:,-]*[a-z0-9-]{4,}$/
+  /^(test|ping|pong|echo)\b[\s:,-]*[a-z0-9-]{4,}$/,
+  // Short commands such as "reply with pong", "say hello", "just type test"
+  /^\W*(?:(?:please|just|only|now|can you|could you|kindly)\s+)*(?:reply|respond|answer|say|type|write|output|print|return|send|text)(?:\s+back)?(?:\s+with)?(?:\s+(?:just|only))?(?:\s+the\s+(?:word|text|phrase|string|number|code))?\s*["'`]?(?!(?:me|us|it|you|them|back)\b)[\w-]{2,24}["'`]?\W*$/,
+  // A "ping/pong/test" word next to a reply command
+  /\b(reply|respond|answer|say|type|write|output|print|return|send|text)\b.{0,15}\b(pong|ping|testing|echo|hello world)\b/,
+  // A bare ping/pong/test message
+  /^\W*(ping|pong|test|testing|echo|hello world)\W*$/
 ];
 
 const OFFTOPIC = [
@@ -70,7 +76,7 @@ const OFFTOPIC = [
   /\b(tell me a joke|sing me|bedtime story|horoscope|weather (in|for)|bitcoin|crypto price|lottery|football score|who will win|who should i vote)\b/
 ];
 const ON_TOPIC =
-  /\b(products?|price|cost|stock|available|availability|orders?|deliver\w*|courier|shipping|returns?|refunds?|warranty|pay\w*|eft|card|support|account|invoice|quote|dealer|store|shop|showroom|collect\w*|pick ?up|charger|cable|router|speaker|tv|camera|cctv|solar|inverter|battery|ups|chair|desk|cot|scooter|bracket|projector|kettle|furniture|soundbar|hdmi|wi-?fi|mesh|headphones|earphones|watch|biometric|repair|spares?|firmware|download|reseller|demo|clearance|baby|nursery|registry|mattress|gift|setup|install\w*|new spirit|newspirit|dealy|babyfurn|ultra-?link)\b/;
+  /\b(products?|price|cost|stock|available|availability|orders?|deliver\w*|courier|shipping|returns?|refunds?|warranty|pay\w*|eft|card|support|account|invoice|quote|dealer|store|shop|showroom|collect\w*|pick ?up|charger|cable|router|speaker|tv|camera|cctv|solar|inverter|battery|ups|chair|desk|cot|scooter|bracket|projector|kettle|furniture|soundbar|hdmi|wi-?fi|mesh|headphones|earphones|watch|biometric|repair|spares?|firmware|download|reseller|demo|clearance|baby|nursery|registry|mattress|gift|setup|install\w*|help|assist\w*|new spirit|newspirit|dealy|babyfurn|ultra-?link)\b/;
 
 const IDENTITY = [
   /\b(which|what) (company|model|llm|language model|ai model|ai|version|engine|provider) (are you|is this|trained|made|powers|runs|do you (use|run on))\b/,
